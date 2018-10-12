@@ -7,7 +7,7 @@ package tal;
 import java.io.*;
 
 /**
- * Programa principal del compilador.
+ * Main program of the compiler.
  */
 public class Main
 {
@@ -15,38 +15,38 @@ public static void main(String args[]) throws IOException
 {
     if(args.length != 1)
     {
-        System.out.println("Parámetros:  nombre_fichero");
+        System.out.println("Parameters:  filename");
         return;
     }
 
-    getTokens(args[0]);
-    compile(args[0]);
+    readTokens(args[0]);
+    //compile(args[0]);
 }
 
-private static void getTokens(String file) throws IOException
+private static void readTokens(String filename) throws IOException
 {
-    AFD afd = new AFD(file);
+    DFA afd = new DFA(filename);
     Token t;
 
     while((t = afd.read()).type != Token.Type.EOF)
     {
-        System.out.printf("%2d %8s  %s\n", t.type.ordinal(),
+        System.out.printf("%2d %7s  %s\n", t.type.ordinal(),
                           t.type, t.name);
     }
 
     afd.close();
 }
 
-private static void compile(String file) throws IOException
+private static void compile(String filename) throws IOException
 {
-    AFD afd = new AFD(file);
-    ADR adr = new ADR(afd);
-    adr.programa();
+    DFA afd = new DFA(filename);
+    DRA adr = new DRA(afd);
+    adr.program();
     adr.close();
 
-    System.out.println("\nCódigo ejecutable:\n");
+    System.out.println("\nExecutable code:\n");
     System.out.println(adr.codeGet());
-    System.out.println("\nEjecución:\n");
+    System.out.println("\nExecution:\n");
     adr.codeRun();
 }
 

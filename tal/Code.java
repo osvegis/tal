@@ -7,82 +7,82 @@ package tal;
 import java.util.*;
 
 /**
- * Esta clase se utiliza en <code>ASin</code> para la generación
- * de código.
+ * This class is used in {@code ASyn} for code generation.
  */
 public class Code
 {
-private static enum TValor
+private static enum TValue
 {
     VOID, INTEGER, STRING, BOOLEAN
 }
 
-private static enum Accion
+private static enum Action
 {
-    DECLARACION, ASIGNACION, IMPRIMIR, IF, ELSE, WHILE,
-    GOTO, END, VARIABLE, CONSTANTE, SUMAR, RESTAR, NEGAR,
-    MULTIPLICAR, DIVIDIR, IGUAL, DISTINTO, MENOR, MENORIGUAL,
-    MAYOR, MAYORIGUAL, NOT, OR, AND, NUM_SENTENCIAS
+    DECLARE, ASSIGN, PRINT, IF, ELSE, WHILE,
+    GOTO, END, VARIABLE, CONSTANT, SUM, SUBTRACT, NEGATE,
+    MULTIPLY, DIVIDE, EQUAL, UNEQUAL, LESS, LESSEQ,
+    GREATER, GREATEREQ, NOT, OR, AND
 }
 
 private static class Variable
 {
-    private String nombre;
-    private TValor tipo;
-    private Object valor;
+    private String name;
+    private TValue type;
+    private Object value;
 }
 
-private static class Codigo
+private static class Statement
 {
-    private int linea, fila, columna;
-    private Accion accion;
-    private TValor tipo;
-    private Object valor;
-    private Codigo next;
+    private int line, row, column;
+    private Action action;
+    private TValue type;
+    private Object value;
+    private Statement next;
 }
 
-private static class Nodo
+private static class Node
 {
-    private TValor tipo;
-    private Object valor;
+    private TValue type;
+    private Object value;
 }
 
-private interface RunCodigo
+private interface RunStatement
 {
-    Codigo run(Codigo c);
+    Statement run(Statement c);
 }
 
-private final RunCodigo m_run[] = new RunCodigo[Accion.values().length];
+private final RunStatement
+    m_run[] = new RunStatement[Action.values().length];
 
-// Datos de compilacion.
+// Compilation data.
 private Token m_token;
 
-// Datos de compilacion y ejecucion
+// Compilation and execution data.
 private final Map<String,Variable> m_variables = new HashMap<>();
-private Codigo m_primero, m_ultimo;
+private Statement m_first, m_last;
 
-// Pila para implementar los saltos en condiciones y bucles
-private final LinkedList<Codigo> m_control = new LinkedList<>();
+// Stack to implement the jumps in conditions and loops.
+private final LinkedList<Statement> m_control = new LinkedList<>();
 
-// Pila de ejecucion
-private final LinkedList<Nodo> m_pila = new LinkedList<>();
+// Execution stack.
+private final LinkedList<Node> m_pila = new LinkedList<>();
 
-private void add(Codigo nodo)
+private void add(Statement nodo)
 {
-    nodo.linea   = m_ultimo==null ? 0 : m_ultimo.linea + 1;
-    nodo.fila    = m_token.row;
-    nodo.columna = m_token.column;
+    nodo.line   = m_last==null ? 0 : m_last.line + 1;
+    nodo.row    = m_token.row;
+    nodo.column = m_token.column;
 
-    if(m_primero == null)
+    if(m_first == null)
     {
-        assert m_ultimo == null;
-        m_primero = m_ultimo = nodo;
+        assert m_last == null;
+        m_first = m_last = nodo;
     }
     else
     {
-        assert m_ultimo.next == null;
-        m_ultimo.next = nodo;
-        m_ultimo = nodo;
+        assert m_last.next == null;
+        m_last.next = nodo;
+        m_last = nodo;
     }
 }
 
@@ -93,66 +93,66 @@ private void error(String mensaje)
         "): "+ mensaje +" "+ m_token.name);
 }
 
-private Codigo newCodigo(Accion accion, TValor tipo, Object valor)
+private Statement newCodigo(Action accion, TValue tipo, Object valor)
 {
-    Codigo c = new Codigo();
-    c.fila    = m_token.row;
-    c.columna = m_token.column;
-    c.accion  = accion;
-    c.tipo    = tipo;
-    c.valor   = valor;
+    Statement c = new Statement();
+    c.row    = m_token.row;
+    c.column = m_token.column;
+    c.action  = accion;
+    c.type    = tipo;
+    c.value   = valor;
     return c;
 }
 
-private void declararVariable(TValor tipo)
+private void addVariable(TValue tipo)
 {
     String nombre = m_token.name;
 
     if(m_variables.containsKey(nombre))
-        error("Ya existe la variable");
+        error("The variable already exists");
 
     Variable v = new Variable();
-    v.nombre   = nombre;
-    v.tipo     = tipo;
-    v.valor    = tipo == TValor.STRING ? "" : 0;
+    v.name   = nombre;
+    v.type     = tipo;
+    v.value    = tipo == TValue.STRING ? "" : 0;
     m_variables.put(nombre, v);
 
-    add(newCodigo(Accion.DECLARACION, tipo, v));
+    add(newCodigo(Action.DECLARE, tipo, v));
 }
 
-public void declararVariableInteger(Token token)
+public void addVariableInteger(Token token)
 {
     m_token = token;
-    declararVariable(TValor.INTEGER);
+    addVariable(TValue.INTEGER);
 }
 
-public void declararVariableString(Token token)
+public void addVariableString(Token token)
 {
     m_token = token;
-    declararVariable(TValor.STRING);
+    addVariable(TValue.STRING);
 }
 
 public void addAssignment(Token token)
 {
     m_token = token;
-    add(newCodigo(Accion.ASIGNACION, TValor.VOID, null));
+    add(newCodigo(Action.ASSIGN, TValue.VOID, null));
 }
 
 public void addPrint(Token token)
 {
     m_token = token;
-    add(newCodigo(Accion.IMPRIMIR, TValor.VOID, null));
+    add(newCodigo(Action.PRINT, TValue.VOID, null));
 }
 
-private void pushCtrl(Codigo n)
+private void pushCtrl(Statement n)
 {
     m_control.addFirst(n);
 }
 
-private Codigo popCtrl()
+private Statement popCtrl()
 {
     if(m_control.isEmpty())
-        throw new RuntimeException("Pila vacia.");
+        throw new RuntimeException("Empty stack");
 
     return m_control.removeFirst();
 }
@@ -160,7 +160,7 @@ private Codigo popCtrl()
 public void addIf(Token token)
 {
     m_token = token;
-    Codigo c = newCodigo(Accion.IF, TValor.VOID, null);
+    Statement c = newCodigo(Action.IF, TValue.VOID, null);
     add(c);
     pushCtrl(c);
 }
@@ -168,20 +168,20 @@ public void addIf(Token token)
 public void addElse(Token token)
 {
     m_token = token;
-    Codigo gotoEnd = newCodigo(Accion.GOTO, TValor.VOID, null);
+    Statement gotoEnd = newCodigo(Action.GOTO, TValue.VOID, null);
     add(gotoEnd);
 
-    Codigo nodoElse = newCodigo(Accion.ELSE, TValor.VOID, null);
+    Statement nodoElse = newCodigo(Action.ELSE, TValue.VOID, null);
     add(nodoElse);
 
-    popCtrl().valor = nodoElse;
+    popCtrl().value = nodoElse;
     pushCtrl(gotoEnd);
 }
 
 public void addWhile(Token token)
 {
     m_token = token;
-    Codigo c = newCodigo(Accion.WHILE, TValor.VOID, null);
+    Statement c = newCodigo(Action.WHILE, TValue.VOID, null);
     add(c);
     pushCtrl(c);
 }
@@ -189,26 +189,26 @@ public void addWhile(Token token)
 public void addEnd(Token token)
 {
     m_token = token;
-    Codigo gotoInicio = null;
+    Statement gotoInicio = null;
 
     boolean bucle = m_control.size() >= 2 &&
-                    m_control.get(1).accion == Accion.WHILE;
+                    m_control.get(1).action == Action.WHILE;
     if(bucle)
     {
-        gotoInicio = newCodigo(Accion.GOTO, TValor.VOID, null);
+        gotoInicio = newCodigo(Action.GOTO, TValue.VOID, null);
         add(gotoInicio);
     }
 
-    Codigo fin = newCodigo(Accion.END, TValor.VOID, null);
+    Statement fin = newCodigo(Action.END, TValue.VOID, null);
     add(fin);
 
     // GOTO al final del bloque: cuando no se cumpla la condicion.
-    popCtrl().valor = fin;
+    popCtrl().value = fin;
 
     if(bucle)
     {
         // GOTO al inicio del bucle.
-        gotoInicio.valor = popCtrl();
+        gotoInicio.value = popCtrl();
     }
 }
 
@@ -218,12 +218,9 @@ public void addVariableAssignment(Token token)
     Variable v = m_variables.get(token.name);
 
     if(v == null)
-    {
-        throw new RuntimeException(
-            "No existe la variable: "+ token.name);
-    }
+        throw new RuntimeException("There is no variable: "+ token.name);
 
-    add(newCodigo(Accion.VARIABLE, TValor.VOID, v));
+    add(newCodigo(Action.VARIABLE, TValue.VOID, v));
 }
 
 public void addVariableExpression(Token token)
@@ -232,64 +229,61 @@ public void addVariableExpression(Token token)
     Variable v = m_variables.get(token.name);
 
     if(v == null)
-    {
-        throw new RuntimeException(
-            "No existe la variable: "+ token.name);
-    }
+        throw new RuntimeException("There is no variable: "+ token.name);
 
-    add(newCodigo(Accion.VARIABLE, v.tipo, v));
+    add(newCodigo(Action.VARIABLE, v.type, v));
 }
 
 public void addInteger(Token token)
 {
     m_token = token;
     Object valor = Long.parseLong(token.name);
-    add(newCodigo(Accion.CONSTANTE, TValor.INTEGER, valor));
+    add(newCodigo(Action.CONSTANT, TValue.INTEGER, valor));
 }
 
 public void addString(Token token)
 {
     m_token = token;
-    add(newCodigo(Accion.CONSTANTE, TValor.STRING, token.name));
+    add(newCodigo(Action.CONSTANT, TValue.STRING, token.name));
 }
 
 public void addOperator(String operador)
 {
-    Accion sentencia;
+    Action sentencia;
 
     switch(operador)
     {
-        case "+":  sentencia = Accion.SUMAR;       break;
-        case "-":  sentencia = Accion.RESTAR;      break;
-        case "-1": sentencia = Accion.NEGAR;       break;
-        case "*":  sentencia = Accion.MULTIPLICAR; break;
-        case "/":  sentencia = Accion.DIVIDIR;     break;
-        case "==": sentencia = Accion.IGUAL;       break;
-        case "<>": sentencia = Accion.DISTINTO;    break;
-        case "<":  sentencia = Accion.MENOR;       break;
-        case "<=": sentencia = Accion.MENORIGUAL;  break;
-        case ">":  sentencia = Accion.MAYOR;       break;
-        case ">=": sentencia = Accion.MAYORIGUAL;  break;
-        case "!":  sentencia = Accion.NOT;         break;
-        case "||": sentencia = Accion.OR;          break;
-        case "&&": sentencia = Accion.AND;         break;
+        case "+":  sentencia = Action.SUM;       break;
+        case "-":  sentencia = Action.SUBTRACT;  break;
+        case "-1": sentencia = Action.NEGATE;    break;
+        case "*":  sentencia = Action.MULTIPLY;  break;
+        case "/":  sentencia = Action.DIVIDE;    break;
+        case "==": sentencia = Action.EQUAL;     break;
+        case "!=": sentencia = Action.UNEQUAL;   break;
+        case "<":  sentencia = Action.LESS;      break;
+        case "<=": sentencia = Action.LESSEQ;    break;
+        case ">":  sentencia = Action.GREATER;   break;
+        case ">=": sentencia = Action.GREATEREQ; break;
+        case "!":  sentencia = Action.NOT;       break;
+        case "||": sentencia = Action.OR;        break;
+        case "&&": sentencia = Action.AND;       break;
         default: throw new AssertionError();
     }
 
-    add(newCodigo(sentencia, TValor.VOID, null));
+    add(newCodigo(sentencia, TValue.VOID, null));
 }
 
 @Override public String toString()
 {
     StringBuilder s = new StringBuilder();
-    Codigo n = m_primero;
+    Statement n = m_first;
 
     while(n != null)
     {
-        s.append(String.format("%5d:  ", n.linea));
+        s.append(String.format("%5d:  ", n.line));
 
-        TValor tipo = n.valor instanceof Variable ?
-                      ((Variable)n.valor).tipo : n.tipo;
+        TValue tipo = n.value instanceof Variable ?
+                      ((Variable)n.value).type : n.type;
         switch(tipo)
         {
             case VOID:    s.append("     "); break;
@@ -299,43 +293,43 @@ public void addOperator(String operador)
             default: throw new AssertionError();
         }
 
-        switch(n.accion)
+        switch(n.action)
         {
-            case DECLARACION: s.append("decl  "); break;
-            case ASIGNACION:  s.append(":=    "); break;
-            case IMPRIMIR:    s.append("print "); break;
-            case IF:          s.append("if    "); break;
-            case ELSE:        s.append("else  "); break;
-            case WHILE:       s.append("while "); break;
-            case GOTO:        s.append("goto  "); break;
-            case END:         s.append("end   "); break;
-            case VARIABLE:    s.append("var   "); break;
-            case CONSTANTE:   s.append("cte   "); break;
-            case SUMAR:       s.append("+     "); break;
-            case RESTAR:      s.append("-     "); break;
-            case NEGAR:       s.append("-1    "); break;
-            case MULTIPLICAR: s.append("*     "); break;
-            case DIVIDIR:     s.append("/     "); break;
-            case IGUAL:       s.append("==    "); break;
-            case DISTINTO:    s.append("<>    "); break;
-            case MENOR:       s.append("<     "); break;
-            case MENORIGUAL:  s.append("<=    "); break;
-            case MAYOR:       s.append(">     "); break;
-            case MAYORIGUAL:  s.append("<=    "); break;
-            case NOT:         s.append("!     "); break;
-            case OR:          s.append("||    "); break;
-            case AND:         s.append("&&    "); break;
+            case DECLARE:   s.append("decl  "); break;
+            case ASSIGN:    s.append("=     "); break;
+            case PRINT:     s.append("print "); break;
+            case IF:        s.append("if    "); break;
+            case ELSE:      s.append("else  "); break;
+            case WHILE:     s.append("while "); break;
+            case GOTO:      s.append("goto  "); break;
+            case END:       s.append("end   "); break;
+            case VARIABLE:  s.append("var   "); break;
+            case CONSTANT:  s.append("cte   "); break;
+            case SUM:       s.append("+     "); break;
+            case SUBTRACT:  s.append("-     "); break;
+            case NEGATE:    s.append("-1    "); break;
+            case MULTIPLY:  s.append("*     "); break;
+            case DIVIDE:    s.append("/     "); break;
+            case EQUAL:     s.append("==    "); break;
+            case UNEQUAL:   s.append("!=    "); break;
+            case LESS:      s.append("<     "); break;
+            case LESSEQ:    s.append("<=    "); break;
+            case GREATER:   s.append(">     "); break;
+            case GREATEREQ: s.append("<=    "); break;
+            case NOT:       s.append("!     "); break;
+            case OR:        s.append("||    "); break;
+            case AND:       s.append("&&    "); break;
             default: throw new AssertionError();
         }
 
-        if(n.valor instanceof Variable)
-            s.append(((Variable)n.valor).nombre);
-        else if(n.accion == Accion.GOTO || n.accion == Accion.IF)
-            s.append(((Codigo)n.valor).linea);
-        else if(n.tipo == TValor.STRING)
-            s.append("\""+ n.valor +"\"");
-        else if(n.tipo == TValor.INTEGER)
-            s.append(n.valor);
+        if(n.value instanceof Variable)
+            s.append(((Variable)n.value).name);
+        else if(n.action == Action.GOTO || n.action == Action.IF)
+            s.append(((Statement)n.value).line);
+        else if(n.type == TValue.STRING)
+            s.append("\""+ n.value +"\"");
+        else if(n.type == TValue.INTEGER)
+            s.append(n.value);
 
         s.append("\n");
         n = n.next;
@@ -344,284 +338,284 @@ public void addOperator(String operador)
     return s.toString();
 }
 
-private void pilaPush(TValor tipo, Object valor)
+private void stackPush(TValue tipo, Object valor)
 {
-    Nodo n  = new Nodo();
-    n.tipo  = tipo;
-    n.valor = valor;
+    Node n  = new Node();
+    n.type  = tipo;
+    n.value = valor;
     m_pila.addFirst(n);
 }
 
-private Nodo pilaPop()
+private Node pilaPop()
 {
     if(m_pila.isEmpty())
-        throw new RuntimeException("Pila vacia.");
+        throw new RuntimeException("Empty stack");
 
     return m_pila.removeFirst();
 }
 
-private void comprobarTipos(Codigo c, Nodo n1, TValor t2)
+private void checkTypes(Statement c, Node n1, TValue t2)
 {
-    if(n1.tipo != t2)
+    if(n1.type != t2)
     {
         throw new RuntimeException(
-            "Tipos incompatibles en "+ c.fila +"."+ c.columna);
+            "Incompatible types in "+ c.row +"."+ c.column);
     }
 }
 
-private Codigo runNext(Codigo c)
+private Statement runNext(Statement c)
 {
     return c.next;
 }
 
-private Codigo runAsignacion(Codigo c)
+private Statement runAsign(Statement c)
 {
-    Nodo n2 = pilaPop(),
+    Node n2 = pilaPop(),
          n1 = pilaPop();
 
-    if(n1.tipo != TValor.VOID)
-        throw new RuntimeException("No es una variable de asignacion.");
+    if(n1.type != TValue.VOID)
+        throw new RuntimeException("It is not an assignment variable");
 
-    Variable v = (Variable)n1.valor;
-    comprobarTipos(c, n2, v.tipo);
-    v.valor = n2.valor;
+    Variable v = (Variable)n1.value;
+    checkTypes(c, n2, v.type);
+    v.value = n2.value;
     return c.next;
 }
 
-private Codigo runImprimir(Codigo c)
+private Statement runPrint(Statement c)
 {
-    System.out.println(pilaPop().valor);
+    System.out.println(pilaPop().value);
     return c.next;
 }
 
-private Codigo runIf(Codigo c)
+private Statement runIf(Statement c)
 {
-    Nodo n = pilaPop();
-    comprobarTipos(c, n, TValor.BOOLEAN);
-    return (Boolean)n.valor ? c.next : (Codigo)c.valor;
+    Node n = pilaPop();
+    checkTypes(c, n, TValue.BOOLEAN);
+    return (Boolean)n.value ? c.next : (Statement)c.value;
 }
 
-private Codigo runGoto(Codigo c)
+private Statement runGoto(Statement c)
 {
-    return (Codigo)c.valor;
+    return (Statement)c.value;
 }
 
-private Codigo runVariable(Codigo c)
+private Statement runVariable(Statement c)
 {
-    Variable v = (Variable)c.valor;
+    Variable v = (Variable)c.value;
 
-    if(c.tipo == TValor.VOID)
+    if(c.type == TValue.VOID)
     {
         // Variable de asignacion.
-        pilaPush(c.tipo, c.valor);
+        stackPush(c.type, c.value);
     }
     else
     {
         // Variable de expresion.
-        assert c.tipo == v.tipo;
-        pilaPush(v.tipo, v.valor);
+        assert c.type == v.type;
+        stackPush(v.type, v.value);
     }
 
     return c.next;
 }
 
-private Codigo runConstante(Codigo c)
+private Statement runConstant(Statement c)
 {
-    pilaPush(c.tipo, c.valor);
+    stackPush(c.type, c.value);
     return c.next;
 }
 
-private Codigo runSumar(Codigo c)
+private Statement runSum(Statement c)
 {
-    Nodo n2 = pilaPop(),
+    Node n2 = pilaPop(),
          n1 = pilaPop();
 
-    if(n1.tipo == TValor.STRING || n2.tipo == TValor.STRING)
+    if(n1.type == TValue.STRING || n2.type == TValue.STRING)
     {
-        pilaPush(TValor.STRING, n1.valor +""+ n2.valor);
+        stackPush(TValue.STRING, n1.value +""+ n2.value);
     }
     else
     {
-        comprobarTipos(c, n1, TValor.INTEGER);
-        comprobarTipos(c, n2, TValor.INTEGER);
-        pilaPush(TValor.INTEGER, (Long)n1.valor + (Long)n2.valor);
+        checkTypes(c, n1, TValue.INTEGER);
+        checkTypes(c, n2, TValue.INTEGER);
+        stackPush(TValue.INTEGER, (Long)n1.value + (Long)n2.value);
     }
 
     return c.next;
 }
 
-private Codigo runRestar(Codigo c)
+private Statement runSubtract(Statement c)
 {
-    Nodo n2 = pilaPop(),
+    Node n2 = pilaPop(),
          n1 = pilaPop();
 
-    comprobarTipos(c, n1, TValor.INTEGER);
-    comprobarTipos(c, n2, TValor.INTEGER);
-    pilaPush(TValor.INTEGER, (Long)n1.valor - (Long)n2.valor);
+    checkTypes(c, n1, TValue.INTEGER);
+    checkTypes(c, n2, TValue.INTEGER);
+    stackPush(TValue.INTEGER, (Long)n1.value - (Long)n2.value);
     return c.next;
 }
 
-private Codigo runNegar(Codigo c)
+private Statement runNegate(Statement c)
 {
-    Nodo n = pilaPop();
-    comprobarTipos(c, n, TValor.INTEGER);
-    pilaPush(TValor.INTEGER, -(Long)n.valor);
+    Node n = pilaPop();
+    checkTypes(c, n, TValue.INTEGER);
+    stackPush(TValue.INTEGER, -(Long)n.value);
     return c.next;
 }
 
-private Codigo runMultiplicar(Codigo c)
+private Statement runMultiply(Statement c)
 {
-    Nodo n2 = pilaPop(),
+    Node n2 = pilaPop(),
          n1 = pilaPop();
 
-    comprobarTipos(c, n1, TValor.INTEGER);
-    comprobarTipos(c, n2, TValor.INTEGER);
-    pilaPush(TValor.INTEGER, (Long)n1.valor * (Long)n2.valor);
+    checkTypes(c, n1, TValue.INTEGER);
+    checkTypes(c, n2, TValue.INTEGER);
+    stackPush(TValue.INTEGER, (Long)n1.value * (Long)n2.value);
     return c.next;
 }
 
-private Codigo runDividir(Codigo c)
+private Statement runDivide(Statement c)
 {
-    Nodo n2 = pilaPop(),
+    Node n2 = pilaPop(),
          n1 = pilaPop();
 
-    comprobarTipos(c, n1, TValor.INTEGER);
-    comprobarTipos(c, n2, TValor.INTEGER);
-    pilaPush(TValor.INTEGER, (Long)n1.valor / (Long)n2.valor);
+    checkTypes(c, n1, TValue.INTEGER);
+    checkTypes(c, n2, TValue.INTEGER);
+    stackPush(TValue.INTEGER, (Long)n1.value / (Long)n2.value);
     return c.next;
 }
 
-private Codigo runIgual(Codigo c)
+private Statement runEqual(Statement c)
 {
-    Nodo n2 = pilaPop(),
+    Node n2 = pilaPop(),
          n1 = pilaPop();
 
-    comprobarTipos(c, n1, TValor.INTEGER);
-    comprobarTipos(c, n2, TValor.INTEGER);
-    pilaPush(TValor.BOOLEAN, n1.valor.equals(n2.valor));
+    checkTypes(c, n1, TValue.INTEGER);
+    checkTypes(c, n2, TValue.INTEGER);
+    stackPush(TValue.BOOLEAN, n1.value.equals(n2.value));
     return c.next;
 }
 
-private Codigo runDistinto(Codigo c)
+private Statement runUnequal(Statement c)
 {
-    Nodo n2 = pilaPop(),
+    Node n2 = pilaPop(),
          n1 = pilaPop();
 
-    comprobarTipos(c, n1, TValor.INTEGER);
-    comprobarTipos(c, n2, TValor.INTEGER);
-    pilaPush(TValor.BOOLEAN, !n1.valor.equals(n2.valor));
+    checkTypes(c, n1, TValue.INTEGER);
+    checkTypes(c, n2, TValue.INTEGER);
+    stackPush(TValue.BOOLEAN, !n1.value.equals(n2.value));
     return c.next;
 }
 
-private Codigo runMenor(Codigo c)
+private Statement runLess(Statement c)
 {
-    Nodo n2 = pilaPop(),
+    Node n2 = pilaPop(),
          n1 = pilaPop();
 
-    comprobarTipos(c, n1, TValor.INTEGER);
-    comprobarTipos(c, n2, TValor.INTEGER);
-    pilaPush(TValor.BOOLEAN, (Long)n1.valor < (Long)n2.valor);
+    checkTypes(c, n1, TValue.INTEGER);
+    checkTypes(c, n2, TValue.INTEGER);
+    stackPush(TValue.BOOLEAN, (Long)n1.value < (Long)n2.value);
     return c.next;
 }
 
-private Codigo runMenorIgual(Codigo c)
+private Statement runLessEq(Statement c)
 {
-    Nodo n2 = pilaPop(),
+    Node n2 = pilaPop(),
          n1 = pilaPop();
 
-    comprobarTipos(c, n1, TValor.INTEGER);
-    comprobarTipos(c, n2, TValor.INTEGER);
-    pilaPush(TValor.BOOLEAN, (Long)n1.valor <= (Long)n2.valor);
+    checkTypes(c, n1, TValue.INTEGER);
+    checkTypes(c, n2, TValue.INTEGER);
+    stackPush(TValue.BOOLEAN, (Long)n1.value <= (Long)n2.value);
     return c.next;
 }
 
-private Codigo runMayor(Codigo c)
+private Statement runGreater(Statement c)
 {
-    Nodo n2 = pilaPop(),
+    Node n2 = pilaPop(),
          n1 = pilaPop();
 
-    comprobarTipos(c, n1, TValor.INTEGER);
-    comprobarTipos(c, n2, TValor.INTEGER);
-    pilaPush(TValor.BOOLEAN, (Long)n1.valor > (Long)n2.valor);
+    checkTypes(c, n1, TValue.INTEGER);
+    checkTypes(c, n2, TValue.INTEGER);
+    stackPush(TValue.BOOLEAN, (Long)n1.value > (Long)n2.value);
     return c.next;
 }
 
-private Codigo runMayorIgual(Codigo c)
+private Statement runGreaterEq(Statement c)
 {
-    Nodo n2 = pilaPop(),
+    Node n2 = pilaPop(),
          n1 = pilaPop();
 
-    comprobarTipos(c, n1, TValor.INTEGER);
-    comprobarTipos(c, n2, TValor.INTEGER);
-    pilaPush(TValor.BOOLEAN, (Long)n1.valor >= (Long)n2.valor);
+    checkTypes(c, n1, TValue.INTEGER);
+    checkTypes(c, n2, TValue.INTEGER);
+    stackPush(TValue.BOOLEAN, (Long)n1.value >= (Long)n2.value);
     return c.next;
 }
 
-private Codigo runNot(Codigo c)
+private Statement runNot(Statement c)
 {
-    Nodo n = pilaPop();
-    comprobarTipos(c, n, TValor.BOOLEAN);
-    pilaPush(TValor.BOOLEAN, !(Boolean)n.valor);
+    Node n = pilaPop();
+    checkTypes(c, n, TValue.BOOLEAN);
+    stackPush(TValue.BOOLEAN, !(Boolean)n.value);
     return c.next;
 }
 
-private Codigo runOr(Codigo c)
+private Statement runOr(Statement c)
 {
-    Nodo n2 = pilaPop(),
+    Node n2 = pilaPop(),
          n1 = pilaPop();
 
-    comprobarTipos(c, n1, TValor.BOOLEAN);
-    comprobarTipos(c, n2, TValor.BOOLEAN);
-    pilaPush(TValor.BOOLEAN, (Boolean)n1.valor || (Boolean)n2.valor);
+    checkTypes(c, n1, TValue.BOOLEAN);
+    checkTypes(c, n2, TValue.BOOLEAN);
+    stackPush(TValue.BOOLEAN, (Boolean)n1.value || (Boolean)n2.value);
     return c.next;
 }
 
-private Codigo runAnd(Codigo c)
+private Statement runAnd(Statement c)
 {
-    Nodo n2 = pilaPop(),
+    Node n2 = pilaPop(),
          n1 = pilaPop();
 
-    comprobarTipos(c, n1, TValor.BOOLEAN);
-    comprobarTipos(c, n2, TValor.BOOLEAN);
-    pilaPush(TValor.BOOLEAN, (Boolean)n1.valor && (Boolean)n2.valor);
+    checkTypes(c, n1, TValue.BOOLEAN);
+    checkTypes(c, n2, TValue.BOOLEAN);
+    stackPush(TValue.BOOLEAN, (Boolean)n1.value && (Boolean)n2.value);
     return c.next;
 }
 
 private void inicializarRun()
 {
-    m_run[Accion.DECLARACION.ordinal()] = this::runNext;
-    m_run[Accion.ASIGNACION .ordinal()] = this::runAsignacion;
-    m_run[Accion.IMPRIMIR   .ordinal()] = this::runImprimir;
-    m_run[Accion.IF         .ordinal()] = this::runIf;
-    m_run[Accion.ELSE       .ordinal()] = this::runNext;
-    m_run[Accion.WHILE      .ordinal()] = this::runNext;
-    m_run[Accion.GOTO       .ordinal()] = this::runGoto;
-    m_run[Accion.END        .ordinal()] = this::runNext;
-    m_run[Accion.VARIABLE   .ordinal()] = this::runVariable;
-    m_run[Accion.CONSTANTE  .ordinal()] = this::runConstante;
-    m_run[Accion.SUMAR      .ordinal()] = this::runSumar;
-    m_run[Accion.RESTAR     .ordinal()] = this::runRestar;
-    m_run[Accion.NEGAR      .ordinal()] = this::runNegar;
-    m_run[Accion.MULTIPLICAR.ordinal()] = this::runMultiplicar;
-    m_run[Accion.DIVIDIR    .ordinal()] = this::runDividir;
-    m_run[Accion.IGUAL      .ordinal()] = this::runIgual;
-    m_run[Accion.DISTINTO   .ordinal()] = this::runDistinto;
-    m_run[Accion.MENOR      .ordinal()] = this::runMenor;
-    m_run[Accion.MENORIGUAL .ordinal()] = this::runMenorIgual;
-    m_run[Accion.MAYOR      .ordinal()] = this::runMayor;
-    m_run[Accion.MAYORIGUAL .ordinal()] = this::runMayorIgual;
-    m_run[Accion.NOT        .ordinal()] = this::runNot;
-    m_run[Accion.OR         .ordinal()] = this::runOr;
-    m_run[Accion.AND        .ordinal()] = this::runAnd;
+    m_run[Action.DECLARE  .ordinal()] = this::runNext;
+    m_run[Action.ASSIGN   .ordinal()] = this::runAsign;
+    m_run[Action.PRINT    .ordinal()] = this::runPrint;
+    m_run[Action.IF       .ordinal()] = this::runIf;
+    m_run[Action.ELSE     .ordinal()] = this::runNext;
+    m_run[Action.WHILE    .ordinal()] = this::runNext;
+    m_run[Action.GOTO     .ordinal()] = this::runGoto;
+    m_run[Action.END      .ordinal()] = this::runNext;
+    m_run[Action.VARIABLE .ordinal()] = this::runVariable;
+    m_run[Action.CONSTANT .ordinal()] = this::runConstant;
+    m_run[Action.SUM      .ordinal()] = this::runSum;
+    m_run[Action.SUBTRACT .ordinal()] = this::runSubtract;
+    m_run[Action.NEGATE   .ordinal()] = this::runNegate;
+    m_run[Action.MULTIPLY .ordinal()] = this::runMultiply;
+    m_run[Action.DIVIDE   .ordinal()] = this::runDivide;
+    m_run[Action.EQUAL    .ordinal()] = this::runEqual;
+    m_run[Action.UNEQUAL  .ordinal()] = this::runUnequal;
+    m_run[Action.LESS     .ordinal()] = this::runLess;
+    m_run[Action.LESSEQ   .ordinal()] = this::runLessEq;
+    m_run[Action.GREATER  .ordinal()] = this::runGreater;
+    m_run[Action.GREATEREQ.ordinal()] = this::runGreaterEq;
+    m_run[Action.NOT      .ordinal()] = this::runNot;
+    m_run[Action.OR       .ordinal()] = this::runOr;
+    m_run[Action.AND      .ordinal()] = this::runAnd;
 }
 
 public void run()
 {
     inicializarRun();
-    Codigo c = m_primero;
+    Statement c = m_first;
 
     while(c != null)
-        c = m_run[c.accion.ordinal()].run(c);
+        c = m_run[c.action.ordinal()].run(c);
 }
 
 } // Code

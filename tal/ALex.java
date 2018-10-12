@@ -7,8 +7,8 @@ package tal;
 import java.io.*;
 
 /**
- * Clase base para implementar analizadores léxicos
- * mediante autómatas finitos deterministas.
+ * Base class to implement a lexical analyser by means of a
+ * deterministic finite automaton.
  */
 public class ALex
 {
@@ -21,8 +21,8 @@ private Token m_token;
 private Runnable m_state, m_start;
 
 /**
- * Construye un analizador léxico.
- * @param file Fichero de texto que se debe analizar.
+ * Build a lexical analyser.
+ * @param file Text file that must be analysed
  * @throws IOException
  */
 public ALex(String file) throws IOException
@@ -31,8 +31,8 @@ public ALex(String file) throws IOException
 }
 
 /**
- * Función para indicar cuál es el estado inicial del autómata.
- * @param s Estado inicial del autómata.
+ * Function to indicate which is the initial state of the automaton.
+ * @param s initial state of the automaton
  */
 public void setStart(Runnable s)
 {
@@ -42,6 +42,12 @@ public void setStart(Runnable s)
     m_start = s;
 }
 
+/**
+ * It causes the automaton to return to the initial state by
+ * discarding the read characters.
+ * This function should be used to discard blank characters and
+ * to finish reading comments.
+ */
 public void restart()
 {
     state(m_start);
@@ -49,7 +55,7 @@ public void restart()
 }
 
 /**
- * Cierra el fichero de texto que se ha analizado.
+ * Close the text file that has been analysed.
  * @throws IOException
  */
 public void close() throws IOException
@@ -58,8 +64,8 @@ public void close() throws IOException
 }
 
 /**
- * Lee el siguiente token del fichero de texto.
- * @return Token leído.
+ * Read the following token from the text file.
+ * @return read token
  * @throws IOException
  */
 public Token read() throws IOException
@@ -96,19 +102,20 @@ private void readChar() throws IOException
 }
 
 /**
- * Interrumpe la compilación con una excepción en caso de que se lea un
- * carácter no permitido.
+ * Interrupt the compilation with an exception in case a
+ * non-allowed character is read.
  */
 public void error()
 {
-    throw new RuntimeException("Caracter no permitido en "+
+    throw new RuntimeException("Non-allowed character in "+
                                m_row +":"+ m_column +" : '"+ m_char +"'");
 }
 
 /**
- * Cuando un estado del autómata termine de leer un token debe llamar
- * a esta función. Los estados que llamen a esta función serán finales.
- * @param t Tipo del token leído.
+ * When a state of the automaton finishes reading a token it
+ * must call this function.
+ * The states that call this function will be final.
+ * @param t Read token type
  */
 public void token(Token.Type t)
 {
@@ -119,9 +126,9 @@ public void token(Token.Type t)
 }
 
 /**
- * Esta función permite dibujar una flecha desde el estado que
- * llama a esta función al estado indicado como parámetro.
- * @param s Estado actual tras leer el siguiente carácter.
+ * This function allows you to draw an arrow from the state that
+ * calls this function to the state indicated as a parameter.
+ * @param s Current state after reading the next character
  */
 public void state(Runnable s)
 {
@@ -130,11 +137,11 @@ public void state(Runnable s)
 }
 
 /**
- * Esta función hace lo mismo que <code>state</code>
- * pero no añade el carácter leído al nombre del token.
- * <p>Se puede utilizar para descartar las dobles comillas de las
- * cadenas de caracteres y los comentarios.
- * @param s Estado actual tras leer el siguiente carácter.
+ * This function does the same thing as {@code state} but
+ * does not add the read character to the name of the token.
+ * It can be used to discard double quotes from character strings
+ * and the comments.
+ * @param s Current state after reading the next character
  * @see #state(Runnable)
  */
 public void stateNoChar(Runnable s)
@@ -143,9 +150,9 @@ public void stateNoChar(Runnable s)
 }
 
 /**
- * Indica si el siguiente carácter coincide con el indicado.
- * @param c Caracter a comparar.
- * @return true si el siguiente carácter coincide con c.
+ * Indicates if the next character matches the indicated one.
+ * @param c Character to compare
+ * @return {@code true} if the next character matches {@code c}
  */
 public boolean isChar(char c)
 {
@@ -153,9 +160,9 @@ public boolean isChar(char c)
 }
 
 /**
- * Indica si el siguiente carácter es válido para el comienzo del
- * nombre de un identificador.
- * @return true si el carácter es válido.
+ * Indicates whether the next character is valid for the
+ * beginning of the name of an identifier.
+ * @return {@code true} if the character is valid
  */
 public boolean isIdCharStart()
 {
@@ -164,11 +171,10 @@ public boolean isIdCharStart()
 }
 
 /**
- * Indica si el siguiente carácter es válido para un identificador.
- * Para comprobar si un nombre de identificador puede comenzar con el
- * siguiente carácter disponible, hay que usar la función
- * {@link #isIdCharStart isIdCharStart}.
- * @return true si el carácter es válido.
+ * Indicates whether the next character is valid for an identifier.
+ * To check if an identifier name can start with the next available
+ * character, use the {@link #isIdCharStart isIdCharStart} function.
+ * @return {@code true} if the character is valid
  */
 public boolean isIdChar()
 {
@@ -178,8 +184,8 @@ public boolean isIdChar()
 }
 
 /**
- * Indica si el siguiente carácter es un dígito.
- * @return true si el carácter es un dígito.
+ * Indicates if the next character is a digit.
+ * @return {@code true} if the next character is a digit
  */
 public boolean isDigitChar()
 {
@@ -187,9 +193,8 @@ public boolean isDigitChar()
 }
 
 /**
- * Indica si el siguiente carácter es un espacio, tabulación,
- * salto de línea...
- * @return true si el carácter es un espacio en blanco.
+ * Indicates if the next character is a space, tabulation, line break, ...
+ * @return {@code true} if the character is a blank
  */
 public boolean isSpaceChar()
 {
@@ -197,8 +202,8 @@ public boolean isSpaceChar()
 }
 
 /**
- * Indica si se ha llegado al final del fichero.
- * @return true si se ha llegado al final del fichero.
+ * Indicates if the end of the file has been reached.
+ * @return {@code true} if the end of the file has been reached
  */
 public boolean isEofChar()
 {

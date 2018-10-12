@@ -5,73 +5,73 @@
 package tal;
 
 /**
- * Elementos básicos del lenguaje.
+ * Basic Elements of Language
  */
 public class Token
 {
-/** Tipos posibles de los tokens. */
+/** Possible types of tokens. */
 public static enum Type
 {
-    /** Palabra reservada {@code integer}. */
+    /** Reserved word {@code integer}. */
     INTEGER,
-    /** Palabra reservada {@code string}. */
+    /** Reserved word {@code string}. */
     STRING,
-    /** Palabra reservada {@code if}. */
+    /** Reserved word {@code if}. */
     IF,
-    /** Palabra reservada {@code else}. */
+    /** Reserved word {@code else}. */
     ELSE,
-    /** Palabra reservada {@code while}. */
+    /** Reserved word {@code while}. */
     WHILE,
-    /** Palabra reservada {@code end}. */
+    /** Reserved word {@code end}. */
     END,
-    /** Palabra reservada {@code print}. */
+    /** Reserved word {@code print}. */
     PRINT,
-    /** Identificadores (nombres de variables). */
+    /** Identifiers (names of variables). */
     ID,
-    /** Número entero. */
+    /** Integer number. */
     INTVAL,
-    /** Cadena de caracteres entre dobles comillas. */
+    /** Character string between double quotes. */
     STRVAL,
-    /** Operador de asignación: {@code :=} */
+    /** Assignment operator: {@code =} */
     ASIGN,
-    /** Operadores: {@code +}, {@code -} */
+    /** Operators: {@code +}, {@code -} */
     SUM,
-    /** Operadores: {@code *}, {@code /} */
+    /** Operators: {@code *}, {@code /} */
     MUL,
-    /** Operadores relacionales.<br>
-     *  {@code =}, {@code <>},
-     *  {@code <}, {@code <=},
-     *  {@code >}, {@code >=} */
+    /** Relational operators.<br>
+     *  {@code ==}, {@code !=},
+     *  {@code <},  {@code <=},
+     *  {@code >},  {@code >=} */
     REL,
-    /** Operador: {@code !} */
+    /** Operator: {@code !} */
     NEG,
-    /** Operador: {@code ||} */
+    /** Operator: {@code ||} */
     OR,
-    /** Operador: {@code &&} */
+    /** Operator: {@code &&} */
     AND,
-    /** Paréntesis izquierdo: {@code (} */
-    IPAR,
-    /** Paréntesis derecho: {@code )} */
-    DPAR,
-    /** Fin de fichero. */
+    /** Left parenthesis: {@code (} */
+    LPAR,
+    /** Right parenthesis: {@code )} */
+    RPAR,
+    /** End of file. */
     EOF
 }
 
-/** Tipo del token. */
+/** Token type. */
 public final Type type;
-/** Nombre del token. */
+/** Token name. */
 public final String name;
-/** Fila donde está el token en el fichero analizado. */
+/** Row where the token is in the analyzed file. */
 public final int row;
-/** Columna donde está el token en el fichero analizado. */
+/** Column where the token is in the analyzed file. */
 public final int column;
 
 /**
- * Construye un token.
- * @param type   Tipo del token.
- * @param name   Nombre del token.
- * @param row    Fila
- * @param column Columna
+ * Token constructor.
+ * @param type   Token type
+ * @param name   Token name
+ * @param row    Row where the token is in the analyzed file
+ * @param column Column where the token is in the analyzed file
  */
 public Token(Type type, String name, int row, int column)
 {
@@ -81,7 +81,10 @@ public Token(Type type, String name, int row, int column)
     this.column = column;
 }
 
-//------------------------------------------------------------------------
+/**
+ * Returns a string representation of the token.
+ * @return a string representation of the token
+ */
 @Override public String toString()
 {
     StringBuilder sb = new StringBuilder();
