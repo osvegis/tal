@@ -174,7 +174,7 @@ private String[] parse()
     expression();
 
     if(m_token != null)
-        error("fin de la expresión");
+        error("end of expression");
 
     return m_postfix.toArray(new String[m_postfix.size()]);
 }
