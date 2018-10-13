@@ -169,7 +169,6 @@ private Syn(String expression)
     m_token = m_lex.next();
 }
 
-//------------------------------------------------------------------------
 private String[] parse()
 {
     expression();
@@ -180,7 +179,6 @@ private String[] parse()
     return m_postfix.toArray(new String[m_postfix.size()]);
 }
 
-//------------------------------------------------------------------------
 private void expression()
 {
     if(is_SUM())
@@ -200,14 +198,12 @@ private void expression()
     }
 }
 
-//------------------------------------------------------------------------
 private void vsum()
 {
     vmul();
     vmul1();
 }
 
-//------------------------------------------------------------------------
 private void vsum1()
 {
     if(is_SUM())
@@ -219,7 +215,6 @@ private void vsum1()
     }
 }
 
-//------------------------------------------------------------------------
 private void vmul()
 {
     if(is_LPAR())
@@ -241,7 +236,6 @@ private void vmul()
     }
 }
 
-//------------------------------------------------------------------------
 private void vmul1()
 {
     if(is_MUL())
@@ -253,7 +247,6 @@ private void vmul1()
     }
 }
 
-//------------------------------------------------------------------------
 private String nextToken()
 {
     String t = m_token;
@@ -261,44 +254,37 @@ private String nextToken()
     return t;
 }
 
-//------------------------------------------------------------------------
 private boolean is_SUM()
 {
     return "+".equals(m_token) || "-".equals(m_token);
 }
 
-//------------------------------------------------------------------------
 private boolean is_MUL()
 {
     return "*".equals(m_token) || "/".equals(m_token);
 }
 
-//------------------------------------------------------------------------
 private boolean is_LPAR()
 {
     return "(".equals(m_token);
 }
 
-//------------------------------------------------------------------------
 private boolean is_RPAR()
 {
     return ")".equals(m_token);
 }
 
-//------------------------------------------------------------------------
 private boolean is_VALUE()
 {
     return m_token != null &&
            !is_SUM() && !is_MUL() && !is_LPAR() && !is_RPAR();
 }
 
-//------------------------------------------------------------------------
 private void add(String token)
 {
     m_postfix.add(token);
 }
 
-//------------------------------------------------------------------------
 private void error(String expected)
 {
     if(m_token == null)
