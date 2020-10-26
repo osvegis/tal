@@ -60,8 +60,6 @@ private void s_start()
         restart();
     else if(isOperator(c))
         state(this::s_operator);
-    else if(Character.isLetter(c))
-        state(this::s_id);
     else if(Character.isDigit(c))
         state(this::s_number);
     else
@@ -71,14 +69,6 @@ private void s_start()
 private void s_operator()
 {
     token();
-}
-
-private void s_id()
-{
-    if(Character.isLetterOrDigit(getChar()))
-        state(this::s_id);
-    else
-        token();
 }
 
 private void s_number()
