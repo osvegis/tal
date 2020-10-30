@@ -77,7 +77,7 @@ private void s_number()
     // Depending on the location, one will be considered as a
     // decimal point and the other will be ignored.
 
-    char c = m_expression.charAt(m_index);
+    char c = getChar();
 
     if(Character.isDigit(c) || c == ',' || c == '.')
         state(this::s_number);
